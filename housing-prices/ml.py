@@ -7,62 +7,36 @@ from pyspark.ml import Pipeline
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.sql.types import DoubleType
 import pyspark.sql.functions as F
+import os 
+import json
 
+os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages "org.apache.hadoop:hadoop-aws:2.7.3" pyspark-shell'
 
 def transData(data):
     return data.rdd.map(lambda r: [Vectors.dense(r[1:-1]),r[-1]]).toDF(['features','label'])
 
 
 if __name__ == '__main__':
+    secrets = json.load(open('secrets.json'))
     scSpark = SparkSession \
         .builder \
         .appName("reading csv") \
         .getOrCreate()
+    scSpark._jsc.hadoopConfiguration().set("fs.s3.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
 
-cols = ['id', 'loc', 'size', 'rooms', 'bathrooms', 'year', 'price']
+    scSpark._jsc.hadoopConfiguration().set("fs.s3a.access.key", secrets["fs.s3a.access.key"])
+    scSpark._jsc.hadoopConfiguration().set("fs.s3a.secret.key", secrets["fs.s3a.secret.key"])
 
-# data_file = 'housing_data_*.csv'
-data_file = 'housing_test_data.csv'
+data_file = 's3a://housing-prices-data/all-data/data.csv'
 df = scSpark.read.csv(data_file, header=True, sep=",").cache()
 print('Total Records = {}'.format(df.count()))
 df = df.drop('index')
 df.show(5, True)
 
-loc_file = 'loc_data*.csv'
-locDF = scSpark.read.csv(loc_file, header=True, sep=",").cache()
-print('Total Records = {}'.format(locDF.count()))
-locDF = locDF.drop('index')
-locDF.show(5, True)
-
-joinDF = df.join(locDF, on=['loc'], how="inner")#.selectExpr("acc_id", "name", "salary", "dept_id", "phone", "address", "email")
-# joinDF = joinDF.drop('index')
-joinDF = joinDF.select(cols)
-joinDF.show(5)
-
-
-# hist_file = 'historical_data_*.csv'
-hist_file = 'historical_housing_prices.csv'
-histDF = scSpark.read.csv(hist_file, header=True, sep=",").cache()
-print('Total Records = {}'.format(histDF.count()))
-histDF = histDF.drop('index')
-histDF = histDF.select(cols)
-histDF.show(5, True)
-
-# ijoinDF = histDF.join(locDF, histDF.loc == locDF.loc, how="inner")#.selectExpr("acc_id", "name", "salary", "dept_id", "phone", "address", "email")
-# ijoinDF.show(5)
-
-# mergeDF = histDF.join(joinDF, histDF.loc == joinDF.loc, "left_outer") \
-#    .select(histDF.loc, joinDF.loc, F.when(joinDF.value.isNull(), histDF.value).otherwise(joinDF.value).alias("value"))
-replaceDf = histDF.alias('a').join(joinDF.alias('b'), on=['id'], how='inner').select('a.*').select(cols)
-resultDF = histDF.subtract(replaceDf).union(joinDF)
-resultDF = resultDF.drop('id')
-resultDF.show()
-
-
-resultDF.write.csv('historical_housing_prices.csv', header="true", mode="overwrite")
+df = df.drop('id')
 
 # Covert data to dense vector
-transformed= transData(resultDF)
+transformed= transData(df)
 transformed.show(5)
 
 # Cast label column to double otherwise it is considered string
