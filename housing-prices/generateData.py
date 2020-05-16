@@ -45,10 +45,10 @@ def house_data(start, stop, loc_data = None):
             data.loc[len(data)] = [i, size, loc, rooms, bathrooms, year, price, loc_data.iloc[loc]["crime"],loc_data.iloc[loc]["salary"] ]
         
         data.index.name = 'index'
-        data.to_csv('sample_data/data.csv')
+        data.to_csv('sample_data/data_' +str(start)+'.csv')
         s3 = boto3.resource('s3')
     
-        s3.meta.client.upload_file('sample_data/data.csv', configs["bucket.name"], 'all-data/data.csv')
+        s3.meta.client.upload_file('sample_data/data_' +str(start)+'.csv', configs["bucket.name"], 'all-data/data.csv/data_' +str(start)+'.csv')
 
     return data
 
@@ -67,10 +67,13 @@ def loc_data_generator():
     s3.meta.client.upload_file('sample_data/loc_data.csv', configs["bucket.name"], 'loc_data.csv')
     return data
 
-def init_data_generator():
+def init_data_generator(start=0, n_points=100000, n_jobs=4):
     print("Generating Init Data")
     loc_data = loc_data_generator()
-    house_data(0, 10000, loc_data)
+    
+    step = int(math.ceil(n_points/n_jobs))
+
+    Parallel(n_jobs=n_jobs)(delayed(house_data)(i, i+step, loc_data) for i in range(start, n_points, step))
 
 def housing_data_generator(start=0, n_points=1000000, n_jobs=4):
 
@@ -82,5 +85,5 @@ configs = json.load(open('config.json'))
 if sys.argv[1] == "init":
     init_data_generator()
 else:
-    housing_data_generator(0, 1000000,4)
+    housing_data_generator(0, 5000000,32)
 # loc_data_generator()
