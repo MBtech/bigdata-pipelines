@@ -17,17 +17,17 @@ def transData(data):
 
 
 if __name__ == '__main__':
-    secrets = json.load(open('secrets.json'))
+    configs = json.load(open('config.json'))
     scSpark = SparkSession \
         .builder \
         .appName("reading csv") \
         .getOrCreate()
     scSpark._jsc.hadoopConfiguration().set("fs.s3.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
 
-    scSpark._jsc.hadoopConfiguration().set("fs.s3a.access.key", secrets["fs.s3a.access.key"])
-    scSpark._jsc.hadoopConfiguration().set("fs.s3a.secret.key", secrets["fs.s3a.secret.key"])
+    scSpark._jsc.hadoopConfiguration().set("fs.s3a.access.key", configs["fs.s3a.access.key"])
+    scSpark._jsc.hadoopConfiguration().set("fs.s3a.secret.key", configs["fs.s3a.secret.key"])
 
-data_file = 's3a://housing-prices-data/all-data/data.csv'
+data_file = 's3a://'+configs["bucket.name"]+'/all-data/data.csv'
 df = scSpark.read.csv(data_file, header=True, sep=",").cache()
 print('Total Records = {}'.format(df.count()))
 df = df.drop('index')
