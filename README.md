@@ -9,9 +9,9 @@ This reporsitory contains demo pipelines for bigdata analysis using Apache Spark
     sudo apt install linuxbrew-wrapper
     ```
 - Install Spark, Scala, and awscli: `brew install spark scala awscli`
-- Install pip: `sudo apt instlal python3-pip`
+- Install pip: `sudo apt install python3-pip`
 - Clone the repository: `git clone https://github.com/MBtech/bigdata-pipelines.git`
-- Install python modules: `cd bigdata-pipelines/; pip3 install -r requirements.txt`
+- Install python modules: `cd bigdata-pipelines/; pip3 install --upgrade pip && sudo pip3 install -r requirements.txt`
 
 ## Setup
 - Modify the `config_template.json` in `housing-prices` directory to create `config.json` with appropriate configuration values.

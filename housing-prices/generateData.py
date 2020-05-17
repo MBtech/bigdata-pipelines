@@ -38,13 +38,14 @@ def house_data(start, stop, loc_data = None, partitions=4):
             data = pd.DataFrame(data=data)
             
             data.index.name = 'index'
-            data.to_csv('sample_data/housing_data_' +str(end)+'.csv')
+            data.to_csv('sample_data/new_data/housing_data_' +str(end)+'.csv')
             s3 = boto3.resource('s3')
         
-            s3.meta.client.upload_file('sample_data/housing_data_' +str(start)+'.csv', configs["bucket.name"], 'current-data/housing_data_' +str(start)+'.csv')
-        return data
+            s3.meta.client.upload_file('sample_data/new_data/housing_data_' +str(end)+'.csv', configs["bucket.name"], 'current-data/housing_data_' +str(end)+'.csv')
+        # return data
     else:
         for p in range(0, partitions):
+            # print(partitions)
             end = start + (p*math.ceil((stop-start)/partitions))    
             size_arr = np.random.choice(house_size, end-start)
             loc_arr = np.random.choice(house_loc, end-start)
@@ -65,12 +66,12 @@ def house_data(start, stop, loc_data = None, partitions=4):
             data = pd.DataFrame(data=data)
 
             data.index.name = 'index'
-            data.to_csv('sample_data/data_' +str(end)+'.csv')
+            data.to_csv('sample_data/base_data/data_' +str(end)+'.csv')
             s3 = boto3.resource('s3')
         
-            s3.meta.client.upload_file('sample_data/data_' +str(start)+'.csv', configs["bucket.name"], 'all-data/data.csv/data_' +str(start)+'.csv')
+            s3.meta.client.upload_file('sample_data/base_data/data_' +str(end)+'.csv', configs["bucket.name"], 'all-data/data.csv/data_' +str(end)+'.csv')
 
-            return data
+        # return data
 
 def loc_data_generator():
     data = pd.DataFrame(columns=["loc", "crime", "salary"])
