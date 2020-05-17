@@ -9,7 +9,11 @@ import json
 
 os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages "org.apache.hadoop:hadoop-aws:2.7.3" \
          --conf "spark.executor.extraJavaOptions=-Dcom.amazonaws.services.s3.enableV4=true" \
-        --conf "spark.driver.extraJavaOptions=-Dcom.amazonaws.services.s3.enableV4=true" pyspark-shell'
+        --conf "spark.driver.extraJavaOptions=-Dcom.amazonaws.services.s3.enableV4=true" \
+        --conf spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version=2 \
+        --conf spark.speculation=false \
+        pyspark-shell \
+        '
 
 
 if __name__ == '__main__':
@@ -18,6 +22,8 @@ if __name__ == '__main__':
         .builder \
         .master(configs["master"]) \
         .config("com.amazonaws.services.s3.enableV4", "true") \
+        .config("spark.driver.memory", configs["driver.memory"]) \
+        .config("spark.executor.memory", configs["executor.memory"]) \
         .appName("reading csv") \
         .getOrCreate()
     scSpark._jsc.hadoopConfiguration().set("fs.s3.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
