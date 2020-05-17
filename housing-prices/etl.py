@@ -13,6 +13,7 @@ if __name__ == '__main__':
     configs = json.load(open('config.json'))
     scSpark = SparkSession \
         .builder \
+        .master("spark://" + configs["master"]+ ":7077") \
         .appName("reading csv") \
         .getOrCreate()
     scSpark._jsc.hadoopConfiguration().set("fs.s3.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
