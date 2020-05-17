@@ -1,12 +1,15 @@
 from pyspark.sql import SparkSession
 from pyspark.sql import SQLContext
+from pyspark import SparkContext
 from pyspark.sql import Row
 from pyspark.sql.types import DoubleType
 import pyspark.sql.functions as F
 import os 
 import json
 
-os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages "org.apache.hadoop:hadoop-aws:2.7.3" pyspark-shell'
+os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages "org.apache.hadoop:hadoop-aws:2.7.3" \
+         --conf "spark.executor.extraJavaOptions=-Dcom.amazonaws.services.s3.enableV4=true" \
+        --conf "spark.driver.extraJavaOptions=-Dcom.amazonaws.services.s3.enableV4=true" pyspark-shell'
 
 
 if __name__ == '__main__':
@@ -14,9 +17,12 @@ if __name__ == '__main__':
     scSpark = SparkSession \
         .builder \
         .master("spark://" + configs["master"]+ ":7077") \
+        .config("com.amazonaws.services.s3.enableV4", "true") \
         .appName("reading csv") \
         .getOrCreate()
     scSpark._jsc.hadoopConfiguration().set("fs.s3.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+    scSpark._jsc.hadoopConfiguration().set("com.amazonaws.services.s3.enableV4", "true")
+    scSpark._jsc.hadoopConfiguration().set("fs.s3a.endpoint", "s3.us-east-2.amazonaws.com")
 
     scSpark._jsc.hadoopConfiguration().set("fs.s3a.access.key", configs["fs.s3a.access.key"])
     scSpark._jsc.hadoopConfiguration().set("fs.s3a.secret.key", configs["fs.s3a.secret.key"])
