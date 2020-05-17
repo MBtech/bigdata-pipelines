@@ -16,7 +16,7 @@ if __name__ == '__main__':
     configs = json.load(open('config.json'))
     scSpark = SparkSession \
         .builder \
-        .master("spark://" + configs["master"]+ ":7077") \
+        .master(configs["master"]) \
         .config("com.amazonaws.services.s3.enableV4", "true") \
         .appName("reading csv") \
         .getOrCreate()
@@ -26,6 +26,8 @@ if __name__ == '__main__':
 
     scSpark._jsc.hadoopConfiguration().set("fs.s3a.access.key", configs["fs.s3a.access.key"])
     scSpark._jsc.hadoopConfiguration().set("fs.s3a.secret.key", configs["fs.s3a.secret.key"])
+    scSpark.conf.set('spark.executor.memory', configs["executor.memory"])
+    scSpark.conf.set('spark.driver.memory', configs["driver.memory"])
 
 cols = ['id', 'loc', 'size', 'rooms', 'bathrooms', 'year', 'price']
 
