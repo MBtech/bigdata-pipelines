@@ -43,7 +43,7 @@ df = df.drop('index')
 df.show(5, True)
 
 # hist_file = 'historical_data_*.csv'
-hist_file = 's3a://'+configs["bucket.name"]+'/all-data/data.csv'
+hist_file = 's3a://'+configs["bucket.name"]+'/base-data/data.csv'
 histDF = scSpark.read.csv(hist_file, header=True, sep=",").cache()
 print('Total Records = {}'.format(histDF.count()))
 histDF = histDF.drop('index')
